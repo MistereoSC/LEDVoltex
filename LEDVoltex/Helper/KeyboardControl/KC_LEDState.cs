@@ -1,6 +1,4 @@
-﻿using System;
-using System.Windows.Media;
-using System.Diagnostics;
+﻿using System.Windows.Media;
 
 namespace LEDVoltex.Helper.KeyboardControl
 {
@@ -19,24 +17,16 @@ namespace LEDVoltex.Helper.KeyboardControl
 
         private byte[] LED_Array;
         private byte[] L1_Idle, L2_FX, L3_BT, L4_Start, L5_VOL;
-        private LEDStaticZone Zone_BT_A, Zone_BT_B, Zone_BT_C, Zone_BT_D, Zone_FX_L, Zone_FX_R, Zone_Idle, Zone_BT_Start;
+        private LEDStaticZone Zone_BT_A, Zone_BT_B, Zone_BT_C, Zone_BT_D, Zone_FX_L, Zone_FX_R, Zone_Idle;
         private LEDDynamicZone Zone_VOL_L, Zone_VOL_R;
-
-        public int[] Sliders;
-        public int[] Cycles;
+        public int VOL_R_Direction = 0, VOL_L_Direction = 0;
 
         public KC_LEDState(int LED_COUNT)
         {
             this.LED_COUNT = LED_COUNT;
-            Cycles = new int[] { 0, 0, 0, 0, 0, 0, 0 };
-            Sliders = new int[] { -1, 0, LED_COUNT, 0 };
-
-
             Zone_VOL_L = new LEDDynamicZone(-1, Length_VOL, 0, LED_COUNT-1, true);
             Zone_VOL_R = new LEDDynamicZone(LED_COUNT, Length_VOL, 0, LED_COUNT - 1, true);
-
             Zone_Idle = new LEDStaticZone(0, LED_COUNT - 1);
-            Zone_BT_Start = new LEDStaticZone(0, LED_COUNT - 1);
 
             int t_Idx = (int)(LED_COUNT - Gap_FX) / 2;
             int mod = (LED_COUNT - Gap_FX) % 2;
@@ -44,9 +34,7 @@ namespace LEDVoltex.Helper.KeyboardControl
             t_Idx += mod == 0 ? Gap_FX : Gap_FX + 1;
             Zone_FX_L = new LEDStaticZone(t_Idx, LED_COUNT - 1);
 
-            
-
-
+          
             int t_cnt = (int)(LED_COUNT - 3 * Gap_BT - 2 * Gap_BT_edge) / 4;
             t_Idx = t_cnt + Gap_BT_edge;
             Zone_BT_A = new LEDStaticZone(Gap_BT_edge - 1, t_Idx - 1);
@@ -67,24 +55,8 @@ namespace LEDVoltex.Helper.KeyboardControl
             L3_BT = new byte[LED_COUNT*3];
             L4_Start = new byte[LED_COUNT*3];
             L5_VOL = new byte[LED_COUNT*3];
-
-            for (int c = 0; c < LED_Array.Length; c++)
-            {
-                L2_FX[c] = 0;
-                L3_BT[c] = 0;
-                L4_Start[c] = 0;
-                L5_VOL[c] = 0;
-            }
-            for (int c = 0; c < LED_COUNT; c++)
-            {
-                L1_Idle[c * 3 + 0] = C_Idle.G;
-                L1_Idle[c * 3 + 1] = C_Idle.R;
-                L1_Idle[c * 3 + 2] = C_Idle.B;
-                LED_Array[c * 3 + 0] = C_Idle.G;
-                LED_Array[c * 3 + 1] = C_Idle.R;
-                LED_Array[c * 3 + 2] = C_Idle.B;
-
-            }
+            FillZone(ref L1_Idle, Zone_Idle, C_Idle);
+            FillZone(ref LED_Array, Zone_Idle, C_Idle);
         }
 
 
@@ -113,48 +85,46 @@ namespace LEDVoltex.Helper.KeyboardControl
             FillZone(ref L5_VOL, Zone_VOL_L, C_NULL);
             FillZone(ref L5_VOL, Zone_VOL_R, C_NULL);
             if (changes[(int)ButtonIDs.VOL_L_Left] == 1) {
-                if(Sliders[(int)SliderIDs.Dir_VOL_L] == 0) { Zone_VOL_L.shiftToEnd(); }
-                Sliders[(int)SliderIDs.Dir_VOL_L] = 1; 
+                if(VOL_L_Direction == 0) { Zone_VOL_L.ShiftToEnd(); }
+                VOL_L_Direction = 1; 
             }
             if (changes[(int)ButtonIDs.VOL_L_Right] == 1) {
-                if (Sliders[(int)SliderIDs.Dir_VOL_L] == 0) { Zone_VOL_L.shiftToStart(); }
-                Sliders[(int)SliderIDs.Dir_VOL_L] = -1; 
+                if (VOL_L_Direction == 0) { Zone_VOL_L.ShiftToStart(); }
+                VOL_L_Direction = -1; 
             }
             if (changes[(int)ButtonIDs.VOL_R_Left] == 1) {
-                if (Sliders[(int)SliderIDs.Dir_VOL_R] == 0) { Zone_VOL_R.shiftToEnd(); }
-                Sliders[(int)SliderIDs.Dir_VOL_R] = 1; 
+                if (VOL_R_Direction == 0) { Zone_VOL_R.ShiftToEnd(); }
+                VOL_R_Direction = 1; 
             }
             if (changes[(int)ButtonIDs.VOL_R_Right] == 1) {
-                if (Sliders[(int)SliderIDs.Dir_VOL_R] == 0) { Zone_VOL_R.shiftToStart(); }
-                Sliders[(int)SliderIDs.Dir_VOL_R] = -1; 
+                if (VOL_R_Direction == 0) { Zone_VOL_R.ShiftToStart(); }
+                VOL_R_Direction = -1; 
             }
 
 
-            if (Sliders[(int)SliderIDs.Dir_VOL_L] == 1) {
-                Zone_VOL_L.shift(LEDDynamicZone.ShiftDirection.LEFT, Speed_VOL); 
+            if (VOL_L_Direction == 1) {
+                Zone_VOL_L.Shift(LEDDynamicZone.ShiftDirection.LEFT, Speed_VOL); 
             }
-            if (Sliders[(int)SliderIDs.Dir_VOL_L] == -1) { 
-                Zone_VOL_L.shift(LEDDynamicZone.ShiftDirection.RIGHT, Speed_VOL); 
+            if (VOL_L_Direction == -1) { 
+                Zone_VOL_L.Shift(LEDDynamicZone.ShiftDirection.RIGHT, Speed_VOL); 
             }
-            if (Sliders[(int)SliderIDs.Dir_VOL_R] == 1) { 
-                Zone_VOL_R.shift(LEDDynamicZone.ShiftDirection.LEFT, Speed_VOL); 
+            if (VOL_R_Direction == 1) { 
+                Zone_VOL_R.Shift(LEDDynamicZone.ShiftDirection.LEFT, Speed_VOL); 
             }
-            if (Sliders[(int)SliderIDs.Dir_VOL_R] == -1) { 
-                Zone_VOL_R.shift(LEDDynamicZone.ShiftDirection.RIGHT, Speed_VOL);  
+            if (VOL_R_Direction == -1) { 
+                Zone_VOL_R.Shift(LEDDynamicZone.ShiftDirection.RIGHT, Speed_VOL);  
             }
 
 
             FillZone(ref L5_VOL, Zone_VOL_L, C_VOL_L);
             FillZone(ref L5_VOL, Zone_VOL_R, C_VOL_R);
-            if (Zone_VOL_L.IsInvisible()) { Sliders[(int)SliderIDs.Dir_VOL_L] = 0; }
-            if (Zone_VOL_R.IsInvisible()) { Sliders[(int)SliderIDs.Dir_VOL_R] = 0; }
+            if (Zone_VOL_L.IsInvisible()) { VOL_L_Direction = 0; }
+            if (Zone_VOL_R.IsInvisible()) { VOL_R_Direction = 0; }
 
-            ReduceCylces();
             MergeArrays(0, LED_COUNT-1);
         }
         private void FillZone(ref byte[] Zone, LEDStaticZone Range, Color Col)
         {
-            string HexC = Col.ToString().Substring(3);
             for(int c = Range.Start(); c <= Range.End(); c++)
             {
                 Zone[c * 3 + 0] = Col.G;
@@ -215,31 +185,7 @@ namespace LEDVoltex.Helper.KeyboardControl
                 LED_Array[c+2] = L1_Idle[c+2];
             }
         }
-        public byte[] getArray() { return LED_Array; }
-        public void ReduceCylces()
-        {
-            for (int c = 0; c < Cycles.Length; c++)
-            {
-                if (Cycles[c] > 0) { Cycles[c]--; }
-            }
-        }
-        public enum CycleIDs
-        {
-            BT_A = 0,
-            BT_B = 1,
-            BT_C = 2,
-            BT_D = 3,
-            BT_Start = 6,
-            FX_L = 4,
-            FX_R = 5
-        }
-        public enum SliderIDs
-        {
-            Pos_VOL_L = 0,
-            Dir_VOL_L = 1,
-            Pos_VOL_R = 2,
-            Dir_VOL_R = 3
-        }
+        public byte[] GetArray() { return LED_Array; }
         private enum ButtonIDs
         {
             BT_A = 0,
@@ -254,6 +200,5 @@ namespace LEDVoltex.Helper.KeyboardControl
             VOL_R_Left = 9,
             VOL_R_Right = 10
         }
-
     }
 }

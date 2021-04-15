@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
+
 using LEDVoltex.Helper.KeyboardControl;
 
 namespace LEDVoltex
@@ -37,13 +35,13 @@ namespace LEDVoltex
             if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
             {
                 int vkCode = Marshal.ReadInt32(lParam);
-                Updater.updateButtonState_Down((Keys)vkCode);
+                Updater.UpdateButtonState_Down((Keys)vkCode);
                 
             }
             if (nCode >= 0 && wParam == (IntPtr)WM_KEYUP)
             {
                 int vkCode = Marshal.ReadInt32(lParam);
-                Updater.updateButtonState_Up((Keys)vkCode);
+                Updater.UpdateButtonState_Up((Keys)vkCode);
 
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
@@ -69,12 +67,10 @@ namespace LEDVoltex
         private int LED_COUNT = 120;
         private static int POLLING_RATE = 30;
         private static KC_Updater Updater;
-        private System.IO.Ports.SerialPort ComPort;
 
         public LVX_KeyboardControls(System.Windows.Controls.Image VIS, System.IO.Ports.SerialPort ComPort)
         {
             Updater = new KC_Updater(POLLING_RATE, LED_COUNT, VIS, ComPort);
-            this.ComPort = ComPort;
         }
 
         public void Init()

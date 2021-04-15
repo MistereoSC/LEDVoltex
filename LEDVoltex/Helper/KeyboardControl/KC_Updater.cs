@@ -22,9 +22,9 @@ namespace LEDVoltex.Helper.KeyboardControl
         private SerialPort ComPort;
 
         private System.Windows.Forms.Timer refreshTimer;
-        private void timerTick(object sender, EventArgs e)
+        private void TimerTick(object sender, EventArgs e)
         {
-            byte[] LEDArray = LEDState.getArray();
+            byte[] LEDArray = LEDState.GetArray();
             VisualizerDraw(LEDArray);
             /*
             bool REVERSE = true;
@@ -61,9 +61,11 @@ namespace LEDVoltex.Helper.KeyboardControl
             
             LEDState = new KC_LEDState(LEDCount);
 
-            refreshTimer = new System.Windows.Forms.Timer();
-            refreshTimer.Interval = POLLING_DELAY;
-            refreshTimer.Tick += new EventHandler(timerTick);
+            refreshTimer = new System.Windows.Forms.Timer
+            {
+                Interval = POLLING_DELAY
+            };
+            refreshTimer.Tick += new EventHandler(TimerTick);
             refreshTimer.Start();
         }
 
@@ -74,7 +76,7 @@ namespace LEDVoltex.Helper.KeyboardControl
             RUNNING = true;
             updaterThread = new Thread(new ThreadStart(Loop));
             updaterThread.Start();
-            VisualizerDraw(LEDState.getArray());
+            VisualizerDraw(LEDState.GetArray());
         }
 
 
@@ -107,7 +109,7 @@ namespace LEDVoltex.Helper.KeyboardControl
             }
             return StateChanges;
         }
-        public void updateButtonState_Down(Keys K)
+        public void UpdateButtonState_Down(Keys K)
         {
             switch (K)
             {
@@ -162,7 +164,7 @@ namespace LEDVoltex.Helper.KeyboardControl
                     break;
             }
         }
-        public void updateButtonState_Up(Keys K)
+        public void UpdateButtonState_Up(Keys K)
         {
             switch (K)
             {

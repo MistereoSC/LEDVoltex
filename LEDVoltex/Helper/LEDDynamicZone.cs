@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace LEDVoltex.Helper
 {
     class LEDDynamicZone
@@ -88,7 +82,7 @@ namespace LEDVoltex.Helper
         }
 
 
-        public void shift(ShiftDirection Direction, int ShiftAmount)
+        public void Shift(ShiftDirection Direction, int ShiftAmount)
         {
             switch (Direction){
                 case ShiftDirection.LEFT:
@@ -150,7 +144,7 @@ namespace LEDVoltex.Helper
 
             }
         }
-        public void shiftToStart() {
+        public void ShiftToStart() {
             if (AllowCutoff)
             {
                 Idx_Start = Idx_Start = Idx_Min - Idx_Count;
@@ -163,7 +157,7 @@ namespace LEDVoltex.Helper
             }
 
         }
-        public void shiftToEnd() {
+        public void ShiftToEnd() {
             if (AllowCutoff)
             {
                 Idx_End = Idx_Max + Idx_Count;

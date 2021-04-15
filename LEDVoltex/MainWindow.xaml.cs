@@ -1,20 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Diagnostics;
 using System.IO.Ports;
-using System.Threading;
 
 namespace LEDVoltex
 {
@@ -55,10 +43,12 @@ namespace LEDVoltex
         {
             try {
                 var ports = SerialPort.GetPortNames();
-                ComPort = new SerialPort("COM4");
-                ComPort.BaudRate = 500000;
-                ComPort.ReadTimeout = 1000;
-                ComPort.WriteTimeout = 1000;
+                ComPort = new SerialPort("COM4")
+                {
+                    BaudRate = 500000,
+                    ReadTimeout = 500,
+                    WriteTimeout = 500
+                };
                 ComPort.Open();
 
                 Debug.Print("DEBUG_Ports:::" + ports.Length.ToString());
