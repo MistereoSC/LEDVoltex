@@ -7,8 +7,8 @@ namespace LEDVoltex.Helper.KeyboardControl
     class KC_LEDState
     {
         private int LED_COUNT;
-        private int Gap_FX = 0, Gap_BT = 0;
-        private int Length_VOL = 40, Speed_VOL = 6;
+        private int Gap_FX = 0, Gap_BT = 8, Gap_BT_edge = 4;
+        private int Length_VOL = 40, Speed_VOL = 12;
         private Color C_NULL = Color.FromRgb(0, 0, 0),
                         C_FX = Color.FromRgb(255, 127, 0),
                         C_BT = Color.FromRgb(0, 0, 255),
@@ -17,8 +17,8 @@ namespace LEDVoltex.Helper.KeyboardControl
                         C_Idle = Color.FromRgb(63, 88, 127);
 
 
-        private string[] LED_Array;
-        private string[] L1_Idle, L2_FX, L3_BT, L4_Start, L5_VOL;
+        private byte[] LED_Array;
+        private byte[] L1_Idle, L2_FX, L3_BT, L4_Start, L5_VOL;
         private LEDStaticZone Zone_BT_A, Zone_BT_B, Zone_BT_C, Zone_BT_D, Zone_FX_L, Zone_FX_R, Zone_Idle, Zone_BT_Start;
         private LEDDynamicZone Zone_VOL_L, Zone_VOL_R;
 
@@ -44,11 +44,12 @@ namespace LEDVoltex.Helper.KeyboardControl
             t_Idx += mod == 0 ? Gap_FX : Gap_FX + 1;
             Zone_FX_L = new LEDStaticZone(t_Idx, LED_COUNT - 1);
 
+            
 
-            t_Idx = (int)(LED_COUNT - 3 * Gap_BT) / 4;
-            int t_cnt = t_Idx;
-            mod = (LED_COUNT - 3 * Gap_BT) % 4;
-            Zone_BT_A = new LEDStaticZone(0, t_Idx - 1);
+
+            int t_cnt = (int)(LED_COUNT - 3 * Gap_BT - 2 * Gap_BT_edge) / 4;
+            t_Idx = t_cnt + Gap_BT_edge;
+            Zone_BT_A = new LEDStaticZone(Gap_BT_edge - 1, t_Idx - 1);
             t_Idx += Gap_BT;
             t_Idx += mod < 2 ? 0 : 1;
             Zone_BT_B = new LEDStaticZone(t_Idx, t_Idx + t_cnt);
@@ -57,32 +58,37 @@ namespace LEDVoltex.Helper.KeyboardControl
             Zone_BT_C = new LEDStaticZone(t_Idx, t_Idx + t_cnt);
             t_Idx += t_cnt + Gap_BT + 1;
             t_Idx += mod < 2 ? 0 : 1;
-            Zone_BT_D = new LEDStaticZone(t_Idx, LED_COUNT - 1);
+            Zone_BT_D = new LEDStaticZone(t_Idx, LED_COUNT - Gap_BT_edge);
 
 
-            LED_Array = new string[LED_COUNT];
-            L1_Idle = new string[LED_COUNT];
-            L2_FX = new string[LED_COUNT];
-            L3_BT = new string[LED_COUNT];
-            L4_Start = new string[LED_COUNT];
-            L5_VOL = new string[LED_COUNT];
+            LED_Array = new byte[LED_COUNT*3];
+            L1_Idle = new byte[LED_COUNT*3];
+            L2_FX = new byte[LED_COUNT*3];
+            L3_BT = new byte[LED_COUNT*3];
+            L4_Start = new byte[LED_COUNT*3];
+            L5_VOL = new byte[LED_COUNT*3];
 
             for (int c = 0; c < LED_Array.Length; c++)
             {
-                L2_FX[c] = "000000";
-                L3_BT[c] = "000000";
-                L4_Start[c] = "000000";
-                L5_VOL[c] = "000000";
+                L2_FX[c] = 0;
+                L3_BT[c] = 0;
+                L4_Start[c] = 0;
+                L5_VOL[c] = 0;
             }
-            for (int c = 0; c < LED_Array.Length; c++)
+            for (int c = 0; c < LED_COUNT; c++)
             {
-                L1_Idle[c] = C_Idle.ToString().Substring(3);
-                LED_Array[c] = C_Idle.ToString().Substring(3);
+                L1_Idle[c * 3 + 0] = C_Idle.G;
+                L1_Idle[c * 3 + 1] = C_Idle.R;
+                L1_Idle[c * 3 + 2] = C_Idle.B;
+                LED_Array[c * 3 + 0] = C_Idle.G;
+                LED_Array[c * 3 + 1] = C_Idle.R;
+                LED_Array[c * 3 + 2] = C_Idle.B;
+
             }
         }
 
 
-        public string[] UpdateArray(int[] changes)
+        public void UpdateArray(int[] changes)
         {
             if(changes[(int)ButtonIDs.FX_L] == 1) { FillZone(ref L2_FX, Zone_FX_L, C_FX); }
             else if (changes[(int)ButtonIDs.FX_L] == -1) { FillZone(ref L2_FX, Zone_FX_L, C_NULL); }
@@ -145,17 +151,18 @@ namespace LEDVoltex.Helper.KeyboardControl
 
             ReduceCylces();
             MergeArrays(0, LED_COUNT-1);
-            return LED_Array;
         }
-        private void FillZone(ref string[] Zone, LEDStaticZone Range, Color Col)
+        private void FillZone(ref byte[] Zone, LEDStaticZone Range, Color Col)
         {
             string HexC = Col.ToString().Substring(3);
             for(int c = Range.Start(); c <= Range.End(); c++)
             {
-                Zone[c] = HexC;
+                Zone[c * 3 + 0] = Col.G;
+                Zone[c * 3 + 1] = Col.R;
+                Zone[c * 3 + 2] = Col.B;
             }
         }
-        private void FillZone(ref string[] Zone, LEDDynamicZone Range, Color Col)
+        private void FillZone(ref byte[] Zone, LEDDynamicZone Range, Color Col)
         {
             if (Range.IsInvisible()) { return; }
             int S = Range.Start();
@@ -163,41 +170,52 @@ namespace LEDVoltex.Helper.KeyboardControl
             if (S < Range.Min() || S < 0) { S = Range.Min(); }
             if (E > Range.Max() || E < 0) { E = Range.Max(); }
 
-            string HexC = Col.ToString().Substring(3);
             for (int c = S; c <= E; c++)
             {
-                Zone[c] = HexC;
+                Zone[c * 3 + 0] = Col.G;
+                Zone[c * 3 + 1] = Col.R;
+                Zone[c * 3 + 2] = Col.B;
             }
         }
 
         private void MergeArrays(int start, int end)
         {
-            for (int c = start; c <= end; c++)
+            for (int c = 3*start; c <= 3*end; c+=3)
             {
-                if (L5_VOL[c] != "000000")
+                if (L5_VOL[c] != 0 || L5_VOL[c+1] != 0 || L5_VOL[c+2] != 0)
                 {
                     LED_Array[c] = L5_VOL[c];
+                    LED_Array[c+1] = L5_VOL[c+1];
+                    LED_Array[c+2] = L5_VOL[c+2];
                     continue;
                 }
-                if (L4_Start[c] != "000000")
+                if (L4_Start[c] != 0 || L4_Start[c+1] != 0 || L4_Start[c+2] != 0)
                 {
                     LED_Array[c] = L4_Start[c];
+                    LED_Array[c+1] = L4_Start[c+1];
+                    LED_Array[c+2] = L4_Start[c+2];
                     continue;
                 }
-                if (L3_BT[c] != "000000")
+                if (L3_BT[c] != 0 || L3_BT[c+1] != 0 || L3_BT[c+2] != 0)
                 {
                     LED_Array[c] = L3_BT[c];
+                    LED_Array[c+1] = L3_BT[c+1];
+                    LED_Array[c+2] = L3_BT[c+2];
                     continue;
                 }
-                if (L2_FX[c] != "000000")
+                if (L2_FX[c] != 0 || L2_FX[c+2] != 0 || L2_FX[c+2] != 0)
                 {
                     LED_Array[c] = L2_FX[c];
+                    LED_Array[c+1] = L2_FX[c+1];
+                    LED_Array[c+2] = L2_FX[c+2];
                     continue;
                 }
                 LED_Array[c] = L1_Idle[c];
+                LED_Array[c+1] = L1_Idle[c+1];
+                LED_Array[c+2] = L1_Idle[c+2];
             }
         }
-        public string[] getArray() { return LED_Array; }
+        public byte[] getArray() { return LED_Array; }
         public void ReduceCylces()
         {
             for (int c = 0; c < Cycles.Length; c++)

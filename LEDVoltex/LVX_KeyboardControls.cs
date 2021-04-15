@@ -66,7 +66,7 @@ namespace LEDVoltex
         private static extern IntPtr GetModuleHandle(string lpModuleName);
         #endregion
 
-        private int LED_COUNT = 12;
+        private int LED_COUNT = 120;
         private static int POLLING_RATE = 30;
         private static KC_Updater Updater;
         private System.IO.Ports.SerialPort ComPort;

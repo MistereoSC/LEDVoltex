@@ -10,7 +10,7 @@ namespace LEDVoltex.Helper.KeyboardControl
 {
     class KC_Updater
     {
-        private int POLLIING_RATE, POLLING_DELAY, LED_COUNT;
+        private static int POLLIING_RATE, POLLING_DELAY, LED_COUNT;
         private bool RUNNING = false;
         private Thread updaterThread;
 
@@ -24,22 +24,24 @@ namespace LEDVoltex.Helper.KeyboardControl
         private System.Windows.Forms.Timer refreshTimer;
         private void timerTick(object sender, EventArgs e)
         {
-            bool REVERSE = false;
-            var arr = LEDState.getArray();
+            byte[] LEDArray = LEDState.getArray();
+            VisualizerDraw(LEDArray);
+            /*
+            bool REVERSE = true;
             if (REVERSE)
             {
-                var arr2 = arr;
-                arr = new string[arr2.Length];
-                for (int c = 0; c < arr2.Length; c++)
+                byte[] copy = LEDArray;
+                LEDArray = new byte[copy.Length];
+                for (int c = 0; c < copy.Length/3; c++)
                 {
-                    int p = arr2.Length - c - 1;
-                    arr[p] = arr2[c];
+                    int p = (copy.Length / 3) - c - 1; 
+                    LEDArray[3*p] = copy[3*c];
+                    LEDArray[3*p+1] = copy[3*c+1];
+                    LEDArray[3*p+2] = copy[3*c+2];
                 }
             }
-            string s = "";
-            foreach(var el in arr) { s += el; }
             //ComPort.Write(s);
-            VisualizerDraw(arr);
+            */
         }
 
         public KC_Updater(int PollingRate, int LEDCount, System.Windows.Controls.Image VIS, SerialPort ComPort)
@@ -47,12 +49,12 @@ namespace LEDVoltex.Helper.KeyboardControl
             writeableBitmap = new WriteableBitmap(LEDCount * 4, 4, 96, 96, PixelFormats.Bgr32, null);
             this.ComPort = ComPort;
             VIS.Source = writeableBitmap;
-            this.LED_COUNT = LEDCount;
+            LED_COUNT = LEDCount;
             if (PollingRate < 1) { PollingRate = 1; }
             else if (PollingRate > 120) { PollingRate = 120; }
-            this.LED_COUNT = LEDCount;
-            this.POLLIING_RATE = PollingRate;
-            this.POLLING_DELAY = (int)(1000 / PollingRate);
+            LED_COUNT = LEDCount;
+            POLLIING_RATE = PollingRate;
+            POLLING_DELAY = (int)(1000 / PollingRate);
             LiveState = new bool[] { false, false, false, false, false, false, false, false, false, false, false };
             LastState = new bool[] { false, false, false, false, false, false, false, false, false, false, false };
             BufferState = new bool[] { false, false, false, false, false, false, false, false, false, false, false };
@@ -84,8 +86,7 @@ namespace LEDVoltex.Helper.KeyboardControl
         {
             while (RUNNING)
             {
-                int[] changes = CompareStates(LastState, BufferState);
-                string[] newArr = LEDState.UpdateArray(changes);
+                LEDState.UpdateArray(CompareStates(LastState, BufferState));
 
                 for (int c = 0; c < BufferState.Length; c++)
                 {
@@ -201,14 +202,20 @@ namespace LEDVoltex.Helper.KeyboardControl
                     break;
             }
         }
-
-        private static void VisualizerDraw(string[] LED_Array)
+        private static void VisualizerDraw(byte[] LED_Array)
         {
 
-            for (int c = 0; c < LED_Array.Length; c++)
+            for (int c = 0; c < LED_COUNT; c++)
             {
                 int column = c * 4;
-                int RGB = int.Parse(LED_Array[c], System.Globalization.NumberStyles.HexNumber);
+                byte[] cBytes = new byte[4];
+
+                cBytes[3] = 255;
+                cBytes[1] = LED_Array[c * 3 + 0];
+                cBytes[2] = LED_Array[c * 3 + 1];
+                cBytes[0] = LED_Array[c * 3 + 2];
+                int RGB = BitConverter.ToInt32(cBytes, 0);
+
                 try
                 {
                     writeableBitmap.Lock();
@@ -236,9 +243,6 @@ namespace LEDVoltex.Helper.KeyboardControl
                 }
             }
         }
-
-
-
         private enum Button
         {
             BT_A = Keys.A,
