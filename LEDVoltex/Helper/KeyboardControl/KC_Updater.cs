@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Threading;
 using System.Windows;
@@ -20,14 +21,21 @@ namespace LEDVoltex.Helper.KeyboardControl
 
         private static WriteableBitmap writeableBitmap;
         private SerialPort ComPort;
-
+        private byte[] oldState;
         private System.Windows.Forms.Timer refreshTimer;
         private void TimerTick(object sender, EventArgs e)
         {
             byte[] LEDArray = LEDState.GetArray();
+            bool changed = false;
             VisualizerDraw(LEDArray);
-            /*
-            bool REVERSE = true;
+            
+            for(int c = 0; c < LEDArray.Length; c++)
+            {
+                if(LEDArray[c] != oldState[c]) { changed = true; break; }
+            }
+
+
+            bool REVERSE = false;
             if (REVERSE)
             {
                 byte[] copy = LEDArray;
@@ -40,14 +48,18 @@ namespace LEDVoltex.Helper.KeyboardControl
                     LEDArray[3*p+2] = copy[3*c+2];
                 }
             }
-            //ComPort.Write(s);
-            */
+            if (ComPort.IsOpen && changed) {
+                ComPort.Write(LEDArray, 0, LEDArray.Length);
+                LEDArray.CopyTo(oldState, 0);
+            }
+
         }
 
         public KC_Updater(int PollingRate, int LEDCount, System.Windows.Controls.Image VIS, SerialPort ComPort)
         {
             writeableBitmap = new WriteableBitmap(LEDCount * 4, 4, 96, 96, PixelFormats.Bgr32, null);
             this.ComPort = ComPort;
+            oldState = new byte[LEDCount * 3];
             VIS.Source = writeableBitmap;
             LED_COUNT = LEDCount;
             if (PollingRate < 1) { PollingRate = 1; }
@@ -70,18 +82,15 @@ namespace LEDVoltex.Helper.KeyboardControl
         }
 
 
-
-
         public void Start() {
             RUNNING = true;
             updaterThread = new Thread(new ThreadStart(Loop));
             updaterThread.Start();
             VisualizerDraw(LEDState.GetArray());
         }
-
-
         public void Stop() {
             RUNNING = false;
+            refreshTimer.Stop();
         }
 
         private void Loop()

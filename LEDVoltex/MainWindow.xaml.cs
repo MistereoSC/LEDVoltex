@@ -10,16 +10,13 @@ namespace LEDVoltex
     {
         private LVX_KeyboardControls LED_Controller_SDVX;
         private SerialPort ComPort;
-
+        private string TMP_ComPort_Name = "COM4";
         public MainWindow()
         {
-
             InitializeComponent();
-
         }
         
         #region Basic Events
-        //Dragmove
         private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
@@ -36,26 +33,18 @@ namespace LEDVoltex
         {
             WindowState = WindowState.Minimized;
         }
-
-
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             try {
-                var ports = SerialPort.GetPortNames();
-                ComPort = new SerialPort("COM4")
+                ComPort = new SerialPort(TMP_ComPort_Name)
                 {
                     BaudRate = 500000,
                     ReadTimeout = 500,
-                    WriteTimeout = 500
+                    WriteTimeout = 500,
+                    DtrEnable = true,
+                    RtsEnable = true
                 };
                 ComPort.Open();
-
-                Debug.Print("DEBUG_Ports:::" + ports.Length.ToString());
-                foreach (var element in ports)
-                {
-                    Debug.Print(element);
-                }
             }
             catch (Exception ex)
             {
@@ -64,13 +53,11 @@ namespace LEDVoltex
             LED_Controller_SDVX = new LVX_KeyboardControls(this.LEDVisualizer, this.ComPort);
             LED_Controller_SDVX.Init();
         }
-
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             LED_Controller_SDVX.Dispose();
             ComPort.Close();
         }
-
         #endregion
     }
 }

@@ -65,7 +65,7 @@ namespace LEDVoltex
         #endregion
 
         private int LED_COUNT = 120;
-        private static int POLLING_RATE = 30;
+        private static int POLLING_RATE = 24;
         private static KC_Updater Updater;
 
         public LVX_KeyboardControls(System.Windows.Controls.Image VIS, System.IO.Ports.SerialPort ComPort)

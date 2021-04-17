@@ -5,14 +5,14 @@ namespace LEDVoltex.Helper.KeyboardControl
     class KC_LEDState
     {
         private int LED_COUNT;
-        private int Gap_FX = 0, Gap_BT = 8, Gap_BT_edge = 4;
-        private int Length_VOL = 40, Speed_VOL = 12;
+        private int Gap_FX = 0, Gap_BT = 0, Gap_BT_edge = 0;
+        private int Length_VOL = 40, Speed_VOL = 18;
         private Color C_NULL = Color.FromRgb(0, 0, 0),
                         C_FX = Color.FromRgb(255, 127, 0),
                         C_BT = Color.FromRgb(0, 0, 255),
                         C_VOL_R = Color.FromRgb(242, 53, 176),
                         C_VOL_L = Color.FromRgb(41, 242, 222),
-                        C_Idle = Color.FromRgb(63, 88, 127);
+                        C_Idle = Color.FromRgb(30, 45, 128);
 
 
         private byte[] LED_Array;
@@ -36,17 +36,18 @@ namespace LEDVoltex.Helper.KeyboardControl
 
           
             int t_cnt = (int)(LED_COUNT - 3 * Gap_BT - 2 * Gap_BT_edge) / 4;
+            mod = (LED_COUNT - 3 * Gap_BT) % 4;
             t_Idx = t_cnt + Gap_BT_edge;
-            Zone_BT_A = new LEDStaticZone(Gap_BT_edge - 1, t_Idx - 1);
+            Zone_BT_A = new LEDStaticZone(Gap_BT_edge, t_Idx - 1);
             t_Idx += Gap_BT;
             t_Idx += mod < 2 ? 0 : 1;
-            Zone_BT_B = new LEDStaticZone(t_Idx, t_Idx + t_cnt);
-            t_Idx += t_cnt + Gap_BT + 1;
-            t_Idx += mod % 2 == 0 ? 0 : 1;
-            Zone_BT_C = new LEDStaticZone(t_Idx, t_Idx + t_cnt);
-            t_Idx += t_cnt + Gap_BT + 1;
+            Zone_BT_B = new LEDStaticZone(t_Idx, t_Idx + t_cnt - 1);
+            t_Idx += t_cnt + Gap_BT;
+            t_Idx += mod % 2 == 0  ? 0 : 1;
+            Zone_BT_C = new LEDStaticZone(t_Idx, t_Idx + t_cnt - 1);
+            t_Idx += t_cnt + Gap_BT;
             t_Idx += mod < 2 ? 0 : 1;
-            Zone_BT_D = new LEDStaticZone(t_Idx, LED_COUNT - Gap_BT_edge);
+            Zone_BT_D = new LEDStaticZone(t_Idx, LED_COUNT - Gap_BT_edge - 1);
 
 
             LED_Array = new byte[LED_COUNT*3];
@@ -147,7 +148,6 @@ namespace LEDVoltex.Helper.KeyboardControl
                 Zone[c * 3 + 2] = Col.B;
             }
         }
-
         private void MergeArrays(int start, int end)
         {
             for (int c = 3*start; c <= 3*end; c+=3)

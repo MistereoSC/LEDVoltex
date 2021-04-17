@@ -71,7 +71,6 @@ namespace LEDVoltex.Helper
             else if (AllowCutoff && Idx_End == Idx_Max + Idx_Count) { return true; }
             else return false;
         }
-
         public bool IsInvisible()
         {
             if (AllowCutoff)
@@ -147,7 +146,7 @@ namespace LEDVoltex.Helper
         public void ShiftToStart() {
             if (AllowCutoff)
             {
-                Idx_Start = Idx_Start = Idx_Min - Idx_Count;
+                Idx_Start = Idx_Min - Idx_Count;
                 Idx_End = Idx_Start - 1;
             }
             else
